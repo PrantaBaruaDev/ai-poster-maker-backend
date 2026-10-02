@@ -16,7 +16,7 @@ export const validateRequest = (zodSchema: z.ZodObject) => {
 
 			throw new ApiError(
 				httpStatus.BAD_REQUEST,
-				result.error.issues[0]?.message,
+				result.error.issues[0]?.message ?? "Validation failed",
 			);
 		}
 
