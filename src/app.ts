@@ -12,7 +12,7 @@ import { notFound } from "./app/middlewares/notFound";
 import {
 	authRateLimiter,
 	globalRateLimiter,
-} from "./app/middlewares/rateLimiter";
+} from "./app/middlewares/rateLimit.middleware";
 import { apiRoutes } from "./routes";
 
 const app: Application = express();

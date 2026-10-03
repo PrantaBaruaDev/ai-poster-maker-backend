@@ -17,7 +17,8 @@
     "lint:check": "biome lint ./src",
     "lint:fix": "biome lint --write ./src",
 
-    "test:layout": "tsx scripts/test-layout.ts"
+    "test:layout": "tsx scripts/test-layout.ts",
+    "promote-admin": "tsx scripts/promote-admin.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
