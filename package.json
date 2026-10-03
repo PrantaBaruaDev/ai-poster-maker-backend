@@ -10,7 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "seed": "tsx prisma/seed.ts",
+    "seed": "tsx prisma/seeds/index.ts",
     "render:sample": "tsx scripts/render-sample.ts",
     "format:check": "biome format ./src",
     "format:fix": "biome format --write ./src",
