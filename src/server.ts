@@ -14,7 +14,7 @@ const main = async () => {
 		// console.log("Redis Connected Successfully.");
 
 		app.listen(PORT, () => {
-			console.log(`Server is running on port ${PORT}: ${config.app_url}`);
+			console.log(`Server is running on port ${PORT}: \n\n\t APP_URL: ${config.app_url}`);
 		});
 	} catch (error) {
 		console.error("Error starting the server:", error);

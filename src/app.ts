@@ -13,6 +13,7 @@ import {
 	authRateLimiter,
 	globalRateLimiter,
 } from "./app/middlewares/rateLimiter";
+import { apiRoutes } from "./routes";
 
 const app: Application = express();
 
@@ -40,11 +41,11 @@ app.get("/", async (req: Request, res: Response) => {
 });
 
 app.use("/api/v1", globalRateLimiter);
-
 app.get("/health", (_req, res) => {
 	res.json({ success: true, data: { status: "ok", ts: Date.now() } });
 });
-// app.use("/api/v1/auth", authRateLimiter, AuthRoutes);
+
+app.use("/api/v1", apiRoutes);
 
 app.use(globalErrorHandler);
 app.use(notFound);

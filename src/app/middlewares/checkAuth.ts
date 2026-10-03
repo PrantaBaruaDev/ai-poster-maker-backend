@@ -1,101 +1,64 @@
-// import { NextFunction, Request, Response } from "express";
-// import { JwtPayload } from "jsonwebtoken";
-// // import { Role, UserStatus } from "@db/enums";
-// import config from "@/config";
-// import { prisma } from "../lib/prisma";
-// import { catchAsync } from "../utils/catchAsync";
-// import { jwtUtils } from "../utils/jwt";
-// import { ApiError } from "../errors/ApiError";
-// import httpStatus from 'http-status';
+import type { NextFunction, Request, Response } from "express";
+import httpStatus from "http-status";
+import { prisma } from "../lib/prisma";
+import { catchAsync } from "../utils/catchAsync";
+import { ApiError } from "../errors/ApiError";
+import { jwtUtils } from "../utils/jwt";
+import config from "@/config";
+import type { Role } from "@/app/modules/auth/auth.interface";
 
-// export interface JwtUserPayload {
-// 	email: string;
-// 	name: string;
-// 	userId: string;
-// 	role: Role;
-// }
+const ACCESS_COOKIE = "accessToken";
 
-// declare global {
-// 	namespace Express {
-// 		interface User extends JwtUserPayload { }
+export const auth = (...requiredRoles: Role[]) =>
+  catchAsync(async (req: Request, _res: Response, next: NextFunction) => {
+    const token = req.cookies?.[ACCESS_COOKIE] as string | undefined;
 
-// 		interface Request {
-// 			user?: User;
-// 		}
-// 	}
-// }
+    if (!token) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, "Not authenticated");
+    }
 
-// export const auth = (...requiredRoles: Role[]) => {
-// 	return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-// 		const authHeader = req.headers.authorization;
+    const verified = jwtUtils.verifyToken(token, config.jwt_access_secret);
+    if (!verified.success || !verified.data) {
+      throw new ApiError(
+        httpStatus.UNAUTHORIZED,
+        config.node_env === "development"
+          ? verified.error ?? "Invalid token"
+          : "Session expired. Please log in again.",
+      );
+    }
 
-// 		if (!authHeader || !authHeader.startsWith("Bearer ")) {
-// 			throw new ApiError(
-// 				httpStatus.UNAUTHORIZED,
-// 				"Unauthorized: Missing or invalid Bearer token"
-// 			);
-// 		}
+    const { id, email, name, role } = verified.data as {
+      id: string;
+      email: string;
+      name: string;
+      role: Role;
+    };
 
-// 		const token = authHeader.split(" ")[1];
+    if (!id || !role) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid token payload");
+    }
 
-// 		if (!token) {
-// 			throw new ApiError(
-// 				httpStatus.UNAUTHORIZED,
-// 				"You are not logged in. Please log in to access this resource.",
-// 			);
-// 		}
+    if (requiredRoles.length && !requiredRoles.includes(role)) {
+      throw new ApiError(
+        httpStatus.FORBIDDEN,
+        "Forbidden: You do not have permission to access this resource",
+      );
+    }
 
-// 		const verifiedToken = jwtUtils.verifyToken(token, config.jwt_access_secret);
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new ApiError(
+        httpStatus.UNAUTHORIZED,
+        "User account no longer exists",
+      );
+    }
 
-// 		if (!verifiedToken.success || !verifiedToken.data) {
-// 			if (config.node_env === "development") {
-// 				throw new ApiError(httpStatus.UNAUTHORIZED, verifiedToken.error);
-// 			} else {
-// 				throw new ApiError(
-// 					httpStatus.UNAUTHORIZED,
-// 					"Unauthorized: Invalided or expired session please log in again."
-// 				);
-// 			}
-// 		}
+    req.user = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role as Role,
+    };
 
-// 		const { email, name, userId, role } = verifiedToken.data as JwtPayload;
-
-// 		if (requiredRoles.length && !requiredRoles.includes(role)) {
-// 			throw new ApiError(
-// 				httpStatus.FORBIDDEN,
-// 				"Forbidden: You do not have permission to access this resource"
-// 			);
-// 		}
-
-// 		const user = await prisma.users.findUnique({
-// 			where: {
-// 				id: userId,
-// 				email,
-// 				name,
-// 				role,
-// 			},
-// 		});
-// 		if (!user) {
-// 			throw new ApiError(
-// 				httpStatus.UNAUTHORIZED,
-// 				"Unauthorized: User account no longer exists"
-// 			);
-// 		}
-
-// 		if (user.status === UserStatus.BLOCKED || user.isDeleted) {
-// 			throw new ApiError(
-// 				httpStatus.FORBIDDEN,
-// 				"Forbidden: Your account is blocked or inactive"
-// 			);
-// 		}
-
-// 		req.user = {
-// 			email: user.email,
-// 			name: user.name,
-// 			userId: user.id,
-// 			role: user.role,
-// 		};
-
-// 		next();
-// 	});
-// };
+    next();
+  });
