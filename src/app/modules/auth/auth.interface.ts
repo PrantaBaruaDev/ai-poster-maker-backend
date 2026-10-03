@@ -31,5 +31,5 @@ export interface SanitizedUser {
   createdAt: Date;
 }
 
-export type RegisterBody = z.infer<typeof registerSchema>[];
-export type LoginBody = z.infer<typeof loginSchema>[];
+export type RegisterBody = z.infer<typeof registerSchema>;
+export type LoginBody = z.infer<typeof loginSchema>;
