@@ -2,6 +2,8 @@
 node_modules/
 dist/
 *.log
+docs
+tmp
 
 # output
 out
@@ -23,6 +25,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .env.test.local
 .env.production.local
 .env.local
+!.env.example
 
 # caches
 .eslintcache
