@@ -50,10 +50,10 @@
     text-align: center;
     font-family: var(--font-headline);
     font-weight: {{fontWeight.headline}};
-    font-size: 130px;
+    font-size: {{headlineSizePx}}px;
     line-height: 1;
     color: {{palette.text}};
-    text-shadow: 5px 5px 0 {{palette.accent}}, 8px 8px 25px rgba(0,0,0,0.7);
+    text-shadow: {{headlineShadowCss}};
     padding: 0 60px;
   }
   .slogan {
@@ -105,8 +105,20 @@
   <div class="poster">
     <div class="diagonal"></div>
 
-    {{#if photoUrls.[0]}}<img class="leader" src="{{photoUrls.[0]}}" />{{/if}}
-    {{#if photoUrls.[1]}}<img class="symbol" src="{{photoUrls.[1]}}" />{{/if}}
+    {{#if photoUrls.[0]}}
+      <img
+        class="leader"
+        src="{{photoUrls.[0]}}"
+        style="object-position: {{photoStyles.[0].objectPosition}};"
+      />
+    {{/if}}
+    {{#if photoUrls.[1]}}
+      <img
+        class="symbol"
+        src="{{photoUrls.[1]}}"
+        style="object-position: {{photoStyles.[1].objectPosition}};"
+      />
+    {{/if}}
 
     <div class="headline">{{headline}}</div>
     {{#if slogan}}<div class="slogan">{{slogan}}</div>{{/if}}
