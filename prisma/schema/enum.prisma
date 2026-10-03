@@ -1,0 +1,19 @@
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OccasionType {
+  VICTORY
+  MOURNING
+  CAMPAIGN
+  GREETINGS
+  FESTIVAL
+}
+
+enum PosterStatus {
+  DRAFT
+  GENERATING
+  COMPLETED
+  FAILED
+}

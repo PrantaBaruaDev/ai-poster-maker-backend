@@ -1,0 +1,15 @@
+model GenerationLog {
+  id               String   @id @default(cuid())
+  posterId         String
+  geminiPromptUsed String?
+  tokensUsed       Int?
+  latencyMs        Int?
+  renderMs         Int?
+  success          Boolean
+  error            String?
+  createdAt        DateTime @default(now())
+
+  poster Poster @relation(fields: [posterId], references: [id], onDelete: Cascade)
+
+  @@index([posterId])
+}

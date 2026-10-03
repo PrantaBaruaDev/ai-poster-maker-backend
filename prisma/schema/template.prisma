@@ -1,0 +1,16 @@
+model Template {
+  id               String       @id @default(cuid())
+  slug             String       @unique
+  title            String
+  occasionType     OccasionType
+  thumbnailUrl     String
+  htmlTemplateKey  String
+  layoutConfig     Json
+  cachedDecoration Json?
+  isActive         Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+
+  posters Poster[]
+
+  @@index([occasionType, isActive])
+}
