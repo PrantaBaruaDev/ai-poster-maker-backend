@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<style>
+  @font-face-css-placeholder
+  :root {
+    --font-headline: {{fontFamily.headline}};
+    --font-name: {{fontFamily.name}};
+    --font-footer: {{fontFamily.footer}};
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1200px; height: 1600px; overflow: hidden; }
+  .poster {
+    position: relative;
+    width: 1200px;
+    height: 1600px;
+    background: linear-gradient(180deg, {{palette.background}} 0%, {{palette.primary}} 100%);
+    overflow: hidden;
+  }
+  /* Diagonal accent */
+  .diagonal {
+    position: absolute;
+    top: 0; right: 0;
+    width: 100%; height: 100%;
+    background: {{palette.accent}};
+    clip-path: polygon(100% 0, 100% 40%, 0 15%, 0 0);
+    opacity: 0.15;
+  }
+  /* Leader photo */
+  .leader {
+    position: absolute;
+    left: 80px; top: 200px;
+    width: 520px; height: 640px;
+    object-fit: cover;
+    border: 10px solid {{palette.accent}};
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+  }
+  /* Symbol */
+  .symbol {
+    position: absolute;
+    right: 120px; top: 320px;
+    width: 300px; height: 300px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.5));
+  }
+  .headline {
+    position: absolute;
+    left: 0; right: 0; top: 920px;
+    text-align: center;
+    font-family: var(--font-headline);
+    font-weight: {{fontWeight.headline}};
+    font-size: 130px;
+    line-height: 1;
+    color: {{palette.text}};
+    text-shadow: 5px 5px 0 {{palette.accent}}, 8px 8px 25px rgba(0,0,0,0.7);
+    padding: 0 60px;
+  }
+  .slogan {
+    position: absolute;
+    left: 0; right: 0; top: 1080px;
+    text-align: center;
+    font-family: var(--font-name);
+    font-weight: 600;
+    font-size: 52px;
+    color: {{palette.accent}};
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+  }
+  .name {
+    position: absolute;
+    left: 0; right: 0; top: 1290px;
+    text-align: center;
+    font-family: var(--font-name);
+    font-weight: {{fontWeight.name}};
+    font-size: 52px;
+    color: {{palette.text}};
+  }
+  .designation {
+    position: absolute;
+    left: 0; right: 0; top: 1360px;
+    text-align: center;
+    font-family: var(--font-name);
+    font-weight: 500;
+    font-size: 36px;
+    color: {{palette.text}};
+  }
+  .footer-bar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 70px;
+    background: {{palette.accent}};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .footer {
+    font-family: var(--font-footer);
+    font-weight: {{fontWeight.footer}};
+    font-size: 28px;
+    color: {{palette.background}};
+  }
+</style>
+</head>
+<body>
+  <div class="poster">
+    <div class="diagonal"></div>
+
+    {{#if photoUrls.[0]}}<img class="leader" src="{{photoUrls.[0]}}" />{{/if}}
+    {{#if photoUrls.[1]}}<img class="symbol" src="{{photoUrls.[1]}}" />{{/if}}
+
+    <div class="headline">{{headline}}</div>
+    {{#if slogan}}<div class="slogan">{{slogan}}</div>{{/if}}
+    <div class="name">{{name}}</div>
+    <div class="designation">{{designation}}</div>
+
+    <div class="footer-bar">
+      <div class="footer">প্রচারে: {{party}} — {{district}}</div>
+    </div>
+  </div>
+</body>
+</html>
