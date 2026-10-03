@@ -20,6 +20,11 @@ export default {
 	redis_host: process.env.REDIS_HOST!,
 	redis_port: process.env.REDIS_PORT!,
 
+	cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+	cloudinary_api_key: process.env.CLOUDINARY_API_KEY!,
+	cloudinary_api_secrect: process.env.CLOUDINARY_API_SECRECT!,
+	cloudinary_folder: process.env.CLOUDINARY_FOLDER!,
+
 	bkash_base_url: process.env.BKASH_BASE_URL!,
 	bkash_username: process.env.BKASH_USERNAME!,
 	bkash_password: process.env.BKASH_PASSWORD!,
@@ -32,6 +37,6 @@ export default {
 	rate_limit_poster_max: process.env.RATE_LIMIT_POSTER_MAX!,
 	rate_limit_upload_max: process.env.RATE_LIMIT_UPLOAD_MAX!,
 
-	max_upload_bytes: process.env.MAX_UPLOAD_BYTES!,
-	max_photos_per_poster: process.env.MAX_PHOTOS_PER_POSTER!,
+	max_upload_bytes: Number(process.env.MAX_UPLOAD_BYTES),
+	max_photos_per_poster: Number(process.env.MAX_PHOTOS_PER_POSTER),
 };
