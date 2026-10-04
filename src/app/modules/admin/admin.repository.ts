@@ -91,8 +91,10 @@ export const adminRepository = {
         userId: true,
         isFlagged: true,
         generatedImageUrl: true,
+        generatedImagePublicId: true,
+        uploadedPhotoPublicIds: true,
       },
-    }),
+  }),
 
   setFlag: (id: string, isFlagged: boolean) =>
     prisma.poster.update({

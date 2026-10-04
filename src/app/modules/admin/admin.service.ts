@@ -5,6 +5,7 @@ import type {
   ListPostersQuery,
   UpdateTemplateBody,
 } from "./admin.interface";
+import { deleteAssetsByIds } from "@/app/lib/cloudinary";
 
 export const adminService = {
   listTemplates: () => adminRepository.listTemplates(),
@@ -72,8 +73,21 @@ export const adminService = {
     const poster = await adminRepository.findPosterById(id);
     if (!poster) throw new ApiError(404, "Poster not found");
 
+    const publicIds: string[] = [];
+    if (poster.generatedImagePublicId) {
+      publicIds.push(poster.generatedImagePublicId);
+    }
+    if (poster.uploadedPhotoPublicIds?.length) {
+      publicIds.push(...poster.uploadedPhotoPublicIds);
+    }
+
     await adminRepository.deletePosterById(id);
-    // Note: cascades to GenerationLog. Cloudinary asset is NOT deleted —
-    // add a storage cleanup step here if you want strict deletion.
-  },
+
+    if (publicIds.length > 0) {
+      const { deleted, failed } = await deleteAssetsByIds(publicIds);
+      console.log(
+        `Admin deleted poster ${id} — Cloudinary: ${deleted} removed, ${failed} failed`,
+      );
+    }
+  }
 };
