@@ -3,15 +3,15 @@ import cors from "cors";
 import express, { Application, Request, Response } from "express";
 import httpStatus from "http-status";
 import config from "@/config";
-import passport from "passport";
 import helmet from "helmet";
-import "./app/lib/passport";
 import { globalErrorHandler } from "./app/middlewares/globalErrorHandler";
 import { notFound } from "./app/middlewares/notFound";
 import { globalRateLimiter } from "./app/middlewares/rateLimit.middleware";
 import { apiRoutes } from "./routes";
 
 const app: Application = express();
+
+app.set("trust proxy", 1);
 
 app.use(helmet());
 app.use(
@@ -27,8 +27,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-app.use(passport.initialize());
-
 app.get("/", async (req: Request, res: Response) => {
 	res.status(httpStatus.OK).json({
 		success: true,
@@ -36,7 +34,8 @@ app.get("/", async (req: Request, res: Response) => {
 	});
 });
 
-app.use("/api/v1", globalRateLimiter);
+app.use(globalRateLimiter);
+
 app.get("/health", (_req, res) => {
 	res.json({ success: true, data: { status: "ok", ts: Date.now() } });
 });

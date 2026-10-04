@@ -12,13 +12,14 @@ import type {
 } from "./auth.interface";
 import { jwtUtils } from "@/app/utils/jwt";
 import config from '@/config';
+import { Role } from "@db/enums";
 
 const sanitize = (user: {
   id: string;
   name: string;
   email: string;
   phone: string | null;
-  role: "USER" | "ADMIN";
+  role: Role;
   createdAt: Date;
 }): SanitizedUser => ({
   id: user.id,

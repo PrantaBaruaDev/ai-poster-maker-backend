@@ -5,25 +5,10 @@ import { sendResponse } from "../../utils/sendResponse";
 import { ApiError } from "../../errors/ApiError";
 import { jwtUtils } from "@/app/utils/jwt";
 import config from "@/config";
+import { accessCookieOptions, refreshCookieOptions } from "./auth.utils";
 
 const ACCESS_COOKIE = "accessToken";
 const REFRESH_COOKIE = "refreshToken";
-
-const accessCookieOptions = {
-  httpOnly: true,
-  secure: config.node_env === "production",
-  sameSite: "lax" as const,
-  maxAge: 1000 * 60 * 60 * 24, // 1 day
-  path: "/",
-};
-
-const refreshCookieOptions = {
-  httpOnly: true,
-  secure: config.node_env === "production",
-  sameSite: "lax" as const,
-  maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-  path: "/api/v1/auth",
-};
 
 const setAuthCookies = (res: Response, access: string, refresh: string) => {
   res.cookie(ACCESS_COOKIE, access, accessCookieOptions);
