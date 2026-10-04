@@ -4,48 +4,36 @@ Express + TypeScript API that generates print-ready Bangla political posters usi
 
 **Live concept:** A user fills a short form (name, designation, party, occasion, headline, up to 3 photos), picks a template, and receives a 1200×1600 print-ready PNG in seconds.
 
-To install dependencies:
-
-```bash
-bun install
-```
-
-### Rendering sample posters
-
-```bash
-bun run render:sample
-```
-
 ---
 
 ## Table of Contents
 
-1. [Tech Stack](#tech-stack)
-2. [Architecture](#architecture)
-3. [Folder Structure](#folder-structure)
-4. [Database Schema](#database-schema)
-5. [Environment Variables](#environment-variables)
-6. [Local Setup](#local-setup)
-7. [API Reference](#api-reference)
-   - [Auth](#auth-endpoints)
-   - [Templates](#template-endpoints)
-   - [Upload](#upload-endpoints)
-   - [Posters](#poster-endpoints)
-   - [Admin](#admin-endpoints)
-8. [Poster Generation Pipeline](#poster-generation-pipeline)
-9. [Gemini Integration](#gemini-integration)
-10. [Font System](#font-system)
-11. [Error Handling](#error-handling)
-12. [Rate Limiting](#rate-limiting)
-13. [Known Limitations](#known-limitations)
-14. [Future Roadmap](#future-roadmap)
+1.  [Tech Stack](#tech-stack)
+2.  [Architecture](#architecture)
+3.  [Folder Structure](#folder-structure)
+4.  [Database Schema](#database-schema)
+5.  [Environment Variables](#environment-variables)
+6.  [Local Setup](#local-setup)
+7.  [API Reference](#api-reference)
+    *   [Auth](#auth-endpoints)
+    *   [Templates](#template-endpoints)
+    *   [Upload](#upload-endpoints)
+    *   [Posters](#poster-endpoints)
+    *   [Admin](#admin-endpoints)
+8.  [Poster Generation Pipeline](#poster-generation-pipeline)
+9.  [Gemini Integration](#gemini-integration)
+10.  [Font System](#font-system)
+11.  [Error Handling](#error-handling)
+12.  [Rate Limiting](#rate-limiting)
+13.  [Known Limitations](#known-limitations)
+14.  [Future Roadmap](#future-roadmap)
 
 ---
 
 ## Tech Stack
 
 | Layer | Technology | Why |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | Runtime | Node.js 24+ (Bun) | Native TypeScript, fast installs |
 | Language | TypeScript 5.9+ | Type safety across the codebase |
 | Framework | Express 5 | Standard, minimal, well-documented |
@@ -94,11 +82,12 @@ route → controller → service → repository → Prisma
 ```
 
 **Rules enforced:**
-- **Routes** wire HTTP + middleware only.
-- **Controllers** validate + shape responses. Never touch Prisma.
-- **Services** hold business logic. Never import Express types.
-- **Repositories** are the **only** place `prisma.*` appears.
-- **Cross-module calls** go service-to-service, never repository-to-repository.
+
+*   **Routes** wire HTTP + middleware only.
+*   **Controllers** validate + shape responses. Never touch Prisma.
+*   **Services** hold business logic. Never import Express types.
+*   **Repositories** are the **only** place `prisma.*` appears.
+*   **Cross-module calls** go service-to-service, never repository-to-repository.
 
 ### Critical design decision — Option B pipeline
 
@@ -177,13 +166,13 @@ backend/
 #### `User`
 
 | Field | Type | Notes |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `id` | `String` (cuid) | Primary key |
 | `name` | `String` | 2–80 chars |
 | `email` | `String` | **Unique**, used for login |
 | `phone` | `String?` | Optional, not unique |
 | `passwordHash` | `String` | bcrypt (10 rounds) |
-| `role` | `Role` | `USER` \| `ADMIN` |
+| `role` | `Role` | `USER` | `ADMIN` |
 | `createdAt` | `DateTime` | Auto |
 
 **Relationships:** `1:N` with `Poster` (cascade delete).
@@ -191,7 +180,7 @@ backend/
 #### `Template`
 
 | Field | Type | Notes |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `id` | `String` (cuid) | Primary key |
 | `slug` | `String` | **Unique**, idempotent seeding |
 | `title` | `String` | Bangla title |
@@ -203,13 +192,13 @@ backend/
 | `isActive` | `Boolean` | Soft-delete flag |
 | `createdAt` | `DateTime` | Auto |
 
-**Indexes:** `@@index([occasionType, isActive])`
+**Indexes:** `@@index([occasionType, isActive])`  
 **Relationships:** `1:N` with `Poster` (`onDelete: Restrict`)
 
 #### `Poster`
 
 | Field | Type | Notes |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `id` | `String` (cuid) | Primary key |
 | `userId` | `String` | FK → User |
 | `templateId` | `String` | FK → Template |
@@ -217,34 +206,34 @@ backend/
 | `uploadedPhotoUrls` | `String[]` | Cloudinary URLs |
 | `layoutResult` | `Json?` | Gemini's validated layout |
 | `generatedImageUrl` | `String?` | Final PNG URL |
-| `status` | `PosterStatus` | `DRAFT` \| `GENERATING` \| `COMPLETED` \| `FAILED` |
+| `status` | `PosterStatus` | `DRAFT` | `GENERATING` | `COMPLETED` | `FAILED` |
 | `retryCount` | `Int` | Default 0, capped at `MAX_RETRIES` |
 | `errorMessage` | `String?` | Populated on failure |
 | `isFlagged` | `Boolean` | Moderation flag |
 | `createdAt` / `updatedAt` | `DateTime` | Auto |
 
-**Indexes:** `@@index([userId, createdAt(sort: Desc)])`, `@@index([status, updatedAt])`
+**Indexes:** `@@index([userId, createdAt(sort: Desc)])`, `@@index([status, updatedAt])`  
 **Relationships:** belongs to `User` (cascade) and `Template` (restrict); `1:N` with `GenerationLog` (cascade).
 
 #### `GenerationLog`
 
 | Field | Type | Notes |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `id` | `String` (cuid) | Primary key |
 | `posterId` | `String` | FK → Poster |
 | `geminiPromptUsed` | `String?` | Full prompt for audit |
 | `tokensUsed` | `Int?` | Gemini token count |
 | `latencyMs` | `Int?` | Gemini round trip |
 | `renderMs` | `Int?` | Puppeteer render time |
-| `success` | `Boolean` | |
-| `error` | `String?` | |
+| `success` | `Boolean` |   |
+| `error` | `String?` |   |
 | `createdAt` | `DateTime` | Auto |
 
 **Indexes:** `@@index([posterId])`
 
 ### Enums
 
-```prisma
+```
 enum Role         { USER ADMIN }
 enum OccasionType { VICTORY MOURNING CAMPAIGN GREETINGS FESTIVAL }
 enum PosterStatus { DRAFT GENERATING COMPLETED FAILED }
@@ -273,7 +262,7 @@ Only one regenerate can be in-flight per poster — enforced by an atomic `updat
 
 ### Setup
 
-```bash
+```
 # Apply schema to database
 bunx prisma migrate dev --name init
 
@@ -287,7 +276,7 @@ bun run seed
 
 ### `.env` template
 
-```env
+```
 # Server
 NODE_ENV=development
 PORT=5000
@@ -323,15 +312,15 @@ MAX_PHOTOS_PER_POSTER=3
 ```
 
 | Variable | Required | Default | Notes |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | `NODE_ENV` | No | `development` | Toggles cookie `secure` flag |
-| `PORT` | No | `5000` | |
+| `PORT` | No | `5000` |   |
 | `CLIENT_ORIGIN` | Yes | — | Must match frontend origin exactly (no trailing slash) for cookies |
 | `DATABASE_URL` | Yes | — | Neon/Supabase/Railway Postgres |
 | `JWT_ACCESS_SECRET` | Yes | — | ≥32 chars |
 | `JWT_REFRESH_SECRET` | Yes | — | ≥32 chars, different from access |
 | `GEMINI_API_KEY` | No | `""` | Empty = skip Gemini, use template defaults |
-| `GEMINI_MODEL` | No | `gemini-3.8-flash` | |
+| `GEMINI_MODEL` | No | `gemini-3.8-flash` |   |
 | `CLOUDINARY_*` | Yes | — | Free tier at cloudinary.com |
 | `MAX_RETRIES` | No | `3` | Regenerate cap per poster |
 | `RATE_LIMIT_*` | No | (see above) | Per-user hourly limits |
@@ -342,7 +331,7 @@ MAX_PHOTOS_PER_POSTER=3
 
 ## Local Setup
 
-```bash
+```
 # 1. Install
 cd backend
 bun install
@@ -367,7 +356,7 @@ bun dev
 
 Health check:
 
-```bash
+```
 curl http://localhost:5000/health
 # {"success":true,"data":{"status":"ok","ts":...}}
 ```
@@ -376,11 +365,11 @@ curl http://localhost:5000/health
 
 ## API Reference
 
-Base path: **`/api/v1`**
+Base path: `**/api/v1**`
 
 All responses share this envelope:
 
-```ts
+```
 // Success
 { "success": true, "message"?: string, "data"?: T, "meta"?: object }
 
@@ -391,7 +380,7 @@ All responses share this envelope:
 ### Status Codes
 
 | Code | Meaning |
-| :--- | :--- |
+| --- | --- |
 | 200 | OK |
 | 201 | Created |
 | 202 | Accepted (async job started) |
@@ -416,7 +405,8 @@ Liveness check.
 **Request:** none
 
 **Response — 200:**
-```json
+
+```
 { "success": true, "data": { "status": "ok", "ts": 1730512345678 } }
 ```
 
@@ -428,11 +418,12 @@ Cookies are httpOnly. Access token: `accessToken` (path `/`, 1 day). Refresh tok
 
 #### `POST /auth/register`
 
-**Auth:** public
+**Auth:** public  
 **Content-Type:** `application/json`
 
 **Body:**
-```json
+
+```
 {
   "name": "মোঃ করিম উদ্দিন",
   "email": "karim@example.com",
@@ -442,14 +433,15 @@ Cookies are httpOnly. Access token: `accessToken` (path `/`, 1 day). Refresh tok
 ```
 
 | Field | Type | Rules |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `name` | string | 2–80 chars |
 | `email` | string | valid email, unique |
 | `password` | string | min 8 chars |
 | `phone` | string? | 10–20 chars |
 
 **Response — 201:**
-```json
+
+```
 {
   "success": true,
   "message": "Registered successfully",
@@ -465,11 +457,13 @@ Cookies are httpOnly. Access token: `accessToken` (path `/`, 1 day). Refresh tok
   }
 }
 ```
+
 **Set-Cookie:** `accessToken=...; HttpOnly; SameSite=Lax` + `refreshToken=...; HttpOnly; SameSite=Lax; Path=/api/v1/auth`
 
 **Errors:**
-- `400` — validation failed
-- `409` — `Email already registered`
+
+*   `400` — validation failed
+*   `409` — `Email already registered`
 
 ---
 
@@ -478,12 +472,14 @@ Cookies are httpOnly. Access token: `accessToken` (path `/`, 1 day). Refresh tok
 **Auth:** public
 
 **Body:**
-```json
+
+```
 { "email": "karim@example.com", "password": "password123" }
 ```
 
 **Response — 200:**
-```json
+
+```
 {
   "success": true,
   "message": "Logged in successfully",
@@ -492,7 +488,8 @@ Cookies are httpOnly. Access token: `accessToken` (path `/`, 1 day). Refresh tok
 ```
 
 **Errors:**
-- `401` — `Invalid email or password`
+
+*   `401` — `Invalid email or password`
 
 ---
 
@@ -503,7 +500,8 @@ Cookies are httpOnly. Access token: `accessToken` (path `/`, 1 day). Refresh tok
 **Request:** none
 
 **Response — 200:**
-```json
+
+```
 {
   "success": true,
   "data": {
@@ -542,7 +540,8 @@ Rotates both tokens. Old refresh token becomes invalid.
 Clears both cookies.
 
 **Response — 200:**
-```json
+
+```
 { "success": true, "message": "Logged out" }
 ```
 
@@ -557,11 +556,12 @@ All require authentication.
 **Query params:**
 
 | Param | Values | Notes |
-| :--- | :--- | :--- |
-| `occasion` | `VICTORY` \| `MOURNING` \| `CAMPAIGN` \| `GREETINGS` \| `FESTIVAL` | Optional filter |
+| --- | --- | --- |
+| `occasion` | `VICTORY` | `MOURNING` | `CAMPAIGN` | `GREETINGS` | `FESTIVAL` | Optional filter |
 
 **Response — 200:**
-```json
+
+```
 {
   "success": true,
   "data": {
@@ -588,7 +588,8 @@ All require authentication.
 #### `GET /templates/:id`
 
 **Response — 200:**
-```json
+
+```
 {
   "success": true,
   "data": {
@@ -620,17 +621,18 @@ All require authentication.
 
 #### `POST /upload`
 
-**Auth:** required
+**Auth:** required  
 **Content-Type:** `multipart/form-data`
 
 **Form field:**
 
 | Field | Type | Rules |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `file` | File | JPG / PNG / WebP, max 5 MB, verified by magic bytes |
 
 **Response — 201:**
-```json
+
+```
 {
   "success": true,
   "message": "File uploaded",
@@ -646,9 +648,10 @@ All require authentication.
 ```
 
 **Errors:**
-- `400` — no file, wrong type, magic byte check failed
-- `401` — not authenticated
-- `413` — file > 5 MB
+
+*   `400` — no file, wrong type, magic byte check failed
+*   `401` — not authenticated
+*   `413` — file > 5 MB
 
 ---
 
@@ -659,7 +662,8 @@ All require authentication.
 **Auth:** required (rate-limited: 10/hour/user)
 
 **Body:**
-```json
+
+```
 {
   "templateId": "cm3k9x8v10000abcd",
   "formData": {
@@ -677,7 +681,7 @@ All require authentication.
 ```
 
 | Field | Type | Rules |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `templateId` | string | must exist + `isActive` |
 | `formData.name` | string | 1–80 |
 | `formData.designation` | string | 1–80 |
@@ -686,10 +690,11 @@ All require authentication.
 | `formData.headline` | string | 1–60 |
 | `formData.subheadline` / `slogan` | string? | 1–80 |
 | `formData.tribute` | string? | 1–200 |
-| `photoUrls` | string[] | 0–3, each valid URL, ≤ template photo slot count |
+| `photoUrls` | string\[\] | 0–3, each valid URL, ≤ template photo slot count |
 
 **Response — 202 (Accepted):**
-```json
+
+```
 {
   "success": true,
   "message": "Poster generation started",
@@ -700,10 +705,11 @@ All require authentication.
 Generation runs async. Poll `GET /posters/:id`.
 
 **Errors:**
-- `400` — validation failed, too many photos
-- `401` — not authenticated
-- `404` — template not found or inactive
-- `429` — rate limit exceeded
+
+*   `400` — validation failed, too many photos
+*   `401` — not authenticated
+*   `404` — template not found or inactive
+*   `429` — rate limit exceeded
 
 ---
 
@@ -712,7 +718,8 @@ Generation runs async. Poll `GET /posters/:id`.
 **Auth:** required (owner or admin)
 
 **Response — 200:**
-```json
+
+```
 {
   "success": true,
   "data": {
@@ -748,12 +755,13 @@ Generation runs async. Poll `GET /posters/:id`.
 **Query params:**
 
 | Param | Default | Max |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `page` | 1 | — |
 | `limit` | 10 | 50 |
 
 **Response — 200:**
-```json
+
+```
 {
   "success": true,
   "data": {
@@ -777,26 +785,29 @@ Lightweight — no `template` object, no `layoutResult`.
 
 #### `POST /posters/:id/regenerate`
 
-**Auth:** required, owner only
+**Auth:** required, owner only  
 **Rate limit:** shares poster generation limit
 
 **Body (optional):**
-```json
+
+```
 { "formData": { "headline": "বিজয়ের ৫৫ বছর" } }
 ```
 
 Send `{}` to regenerate with existing data. Send partial `formData` to override fields.
 
 **Response — 202:**
-```json
+
+```
 { "success": true, "message": "Regeneration started", "data": { "posterId": "cm...", "status": "GENERATING" } }
 ```
 
 **Errors:**
-- `401` — not authenticated
-- `404` — poster not found / not owned
-- `409` — already generating (concurrent regenerate)
-- `429` — retry limit reached (default: 3)
+
+*   `401` — not authenticated
+*   `404` — poster not found / not owned
+*   `409` — already generating (concurrent regenerate)
+*   `429` — retry limit reached (default: 3)
 
 ---
 
@@ -816,7 +827,7 @@ Send `{}` to regenerate with existing data. Send partial `formData` to override 
 
 All require `role: "ADMIN"`. Promote a user with:
 
-```bash
+```
 bun run promote-admin user@example.com
 # then log out + log in to receive a JWT with the ADMIN role
 ```
@@ -832,7 +843,8 @@ Lists **all** templates including inactive.
 #### `POST /admin/templates`
 
 **Body:**
-```json
+
+```
 {
   "slug": "eid-greetings",
   "title": "ঈদ মোবারক",
@@ -859,7 +871,8 @@ Lists **all** templates including inactive.
 Partial update. Any field from `POST` except `slug`.
 
 **Body example:**
-```json
+
+```
 { "title": "ঈদ মোবারক ২০২৬", "isActive": false }
 ```
 
@@ -872,7 +885,8 @@ Partial update. Any field from `POST` except `slug`.
 **Soft delete** — sets `isActive = false`. Existing posters remain intact.
 
 **Response — 200:**
-```json
+
+```
 { "success": true, "message": "Template deactivated", "data": { "template": { "id": "cm...", "isActive": false } } }
 ```
 
@@ -887,13 +901,14 @@ Moderation queue.
 **Query params:**
 
 | Param | Type | Notes |
-| :--- | :--- | :--- |
-| `flagged` | `true` \| `false` | optional filter |
+| --- | --- | --- |
+| `flagged` | `true` | `false` | optional filter |
 | `page` | int ≥ 1 | default 1 |
 | `limit` | int 1–100 | default 20 |
 
 **Response — 200:**
-```json
+
+```
 {
   "success": true,
   "data": {
@@ -919,12 +934,14 @@ Moderation queue.
 #### `PATCH /admin/posters/:id/flag`
 
 **Body:**
-```json
+
+```
 { "isFlagged": true, "reason": "Inappropriate content" }
 ```
 
 **Response — 200:**
-```json
+
+```
 { "success": true, "message": "Poster flagged", "data": { "poster": { "id": "cm...", "isFlagged": true } } }
 ```
 
@@ -1001,7 +1018,7 @@ Receives the occasion, headline, word count, photo count, and template's base pa
 
 Returns **strictly-shaped JSON**:
 
-```json
+```
 {
   "palette": {
     "primary": "#006A4E",
@@ -1020,18 +1037,18 @@ Returns **strictly-shaped JSON**:
 
 ### What Gemini Does **Not** Do
 
-- Does not draw the image
-- Does not draw text
-- Does not know the user's spelling
+*   Does not draw the image
+*   Does not draw text
+*   Does not know the user's spelling
 
 Bangla text is rendered by Puppeteer, guaranteeing correct conjuncts and spelling.
 
 ### Guardrails
 
-- **Zod validation** against `geminiLayoutSchema` — rejects malformed output
-- **Two attempts**, 15-second timeout each
-- **Fallback** to template defaults on failure — the poster still renders
-- **Code-fence stripping** — handles models that ignore `responseMimeType: "application/json"`
+*   **Zod validation** against `geminiLayoutSchema` — rejects malformed output
+*   **Two attempts**, 15-second timeout each
+*   **Fallback** to template defaults on failure — the poster still renders
+*   **Code-fence stripping** — handles models that ignore `responseMimeType: "application/json"`
 
 ### Prompt Design
 
@@ -1039,8 +1056,8 @@ The system prompt provides **creative latitude** ("choose colors that fit the oc
 
 ### Cost Control
 
-- Rate limiting: 10 poster generations per user per hour
-- AI is off the critical path — no user is ever blocked by Gemini
+*   Rate limiting: 10 poster generations per user per hour
+*   AI is off the critical path — no user is ever blocked by Gemini
 
 ### Optional
 
@@ -1054,7 +1071,7 @@ If `GEMINI_API_KEY` is empty, `isGeminiConfigured()` returns `false` and the lay
 
 Fonts are referenced **by role** (`headline`, `name`, `footer`, `accent`, `serif`, `fallback`), never by name. Templates use CSS variables fed from `font-registry.ts`.
 
-```ts
+```
 // font-registry.ts — THE single source of truth
 export const FONT_REGISTRY: Record<FontRole, FontFace> = {
   headline:  { family: "Anek Bangla",       weight: 800, file: "AnekBangla-ExtraBold.ttf" },
@@ -1084,12 +1101,13 @@ All errors funnel through `error.middleware.ts`, which formats a consistent resp
 
 ### Custom `ApiError`
 
-```ts
+```
 throw new ApiError(404, "Poster not found");
 ```
 
 Produces:
-```json
+
+```
 { "success": false, "message": "Poster not found" }
 ```
 
@@ -1097,7 +1115,7 @@ Produces:
 
 Automatically converted to **400** with field-level detail:
 
-```json
+```
 {
   "success": false,
   "message": "Validation failed",
@@ -1118,8 +1136,8 @@ Automatically converted to **413** or **400**.
 
 ### Never Leak
 
-- `passwordHash` is never returned in any response (a `sanitize()` helper strips it).
-- Ownership failures return **404**, not **403**, to avoid leaking resource existence.
+*   `passwordHash` is never returned in any response (a `sanitize()` helper strips it).
+*   Ownership failures return **404**, not **403**, to avoid leaking resource existence.
 
 ---
 
@@ -1128,7 +1146,7 @@ Automatically converted to **413** or **400**.
 Two limiters, both keyed by `req.user.id` (falls back to `req.ip`):
 
 | Limiter | Applied To | Default |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `posterGenerationLimiter` | `POST /posters`, `POST /posters/:id/regenerate` | 10 / hour / user |
 | `uploadLimiter` | `POST /upload` | 30 / hour / user |
 
@@ -1145,7 +1163,7 @@ Rate limit state is **in-memory** — resets on server restart. For production, 
 These were **intentionally deferred** per the PRD's Section 7 task breakdown and the planning document's Section 1.2:
 
 | Feature | Status |
-| :--- | :--- |
+| --- | --- |
 | Admin UI | **Deferred** — backend API is complete; frontend panel is Phase 9 |
 | Moderation queue UI | **Deferred** — API exists (`GET /admin/posters?flagged=true`) |
 | Usage analytics dashboard | **Deferred** |
@@ -1159,29 +1177,29 @@ These were **intentionally deferred** per the PRD's Section 7 task breakdown and
 
 ### Technical Limitations
 
-1. **Cloudinary cleanup on delete.** Deleting a poster removes the DB row but does **not** delete the Cloudinary assets. A cleanup helper (`deleteAssetsByUrls`) exists in `lib/cloudinary.ts` and is ready to wire in. Fix in Phase 2.
+**Cloudinary cleanup on delete.** Deleting a poster removes the DB row but does **not** delete the Cloudinary assets. A cleanup helper (`deleteAssetsByUrls`) exists in `lib/cloudinary.ts` and is ready to wire in. Fix in Phase 2.
 
-2. **In-memory rate limiting.** Resets on restart. Fine for MVP; migrate to Redis for multi-instance deployments.
+**In-memory rate limiting.** Resets on restart. Fine for MVP; migrate to Redis for multi-instance deployments.
 
-3. **Single-process async job.** Long-running generations live in the API process. A restart mid-generation loses the job (mitigated by startup recovery, which marks them `FAILED`).
+**Single-process async job.** Long-running generations live in the API process. A restart mid-generation loses the job (mitigated by startup recovery, which marks them `FAILED`).
 
-4. **No CSRF protection.** Cookies are `SameSite=Lax`, which prevents cross-site POST attacks for most cases. For a public launch, add a CSRF token.
+**No CSRF protection.** Cookies are `SameSite=Lax`, which prevents cross-site POST attacks for most cases. For a public launch, add a CSRF token.
 
-5. **No request-id tracing.** Errors are logged but not correlated across a request. Add a `req.id` middleware for production.
+**No request-id tracing.** Errors are logged but not correlated across a request. Add a `req.id` middleware for production.
 
-6. **Decorations partially rendered.** Gemini suggests `decorations[]` (rice paddy, dove, etc.) but templates only consume `palette`, `headlineStyle`, and `photoCrops`. Decorations require SVG assets, deferred to Phase 2.
+**Decorations partially rendered.** Gemini suggests `decorations[]` (rice paddy, dove, etc.) but templates only consume `palette`, `headlineStyle`, and `photoCrops`. Decorations require SVG assets, deferred to Phase 2.
 
-7. **`zoom` on photo crops not applied.** The `photoCrops[].zoom` value is passed to the renderer but templates only use `object-position`. Full zoom requires a wrapping `overflow: hidden` container.
+`**zoom**` **on photo crops not applied.** The `photoCrops[].zoom` value is passed to the renderer but templates only use `object-position`. Full zoom requires a wrapping `overflow: hidden` container.
 
-8. **Template slot geometry is hardcoded in `.hbs`.** The `layoutConfig.photoSlots` values in the DB don't drive the template CSS — the CSS is authored manually. A fully dynamic renderer (that reads slot positions from `layoutConfig`) is a Phase 2 refactor.
+**Template slot geometry is hardcoded in** `**.hbs**`**.** The `layoutConfig.photoSlots` values in the DB don't drive the template CSS — the CSS is authored manually. A fully dynamic renderer (that reads slot positions from `layoutConfig`) is a Phase 2 refactor.
 
 ### Security Notes
 
-- JWT secrets **must** be 32+ characters. Generate with `openssl rand -hex 32`.
-- Passwords hashed with bcrypt at 10 rounds.
-- Uploaded files verified by **magic bytes**, not just MIME type — a `.txt` renamed to `.jpg` is rejected.
-- Users cannot read or delete another user's posters (`404`, not `403`).
-- Admin actions require both authentication and `role === "ADMIN"`.
+*   JWT secrets **must** be 32+ characters. Generate with `openssl rand -hex 32`.
+*   Passwords hashed with bcrypt rounds.
+*   Uploaded files verified by **magic bytes**, not just MIME type — a `.txt` renamed to `.jpg` is rejected.
+*   Users cannot read or delete another user's posters (`404`, not `403`).
+*   Admin actions require both authentication and `role === "ADMIN"`.
 
 ---
 
@@ -1189,28 +1207,28 @@ These were **intentionally deferred** per the PRD's Section 7 task breakdown and
 
 ### Phase 2 (post-deadline)
 
-- **Admin UI** — Next.js pages for template CRUD + moderation queue
-- **Cloudinary cleanup** — wire `deleteAssetsByUrls` into delete flows
-- **PDF export** — `page.pdf()` in Puppeteer, alongside PNG
-- **Decorations** — SVG assets + template rendering
-- **Full dynamic slot geometry** — read `layoutConfig.photoSlots` in templates
-- **Redis + BullMQ** — offload generation to a worker queue
-- **CSRF protection** — token-based, stored in a cookie
+*   **Admin UI** — Next.js pages for template CRUD + moderation queue
+*   **Cloudinary cleanup** — wire `deleteAssetsByUrls` into delete flows
+*   **PDF export** — `page.pdf()` in Puppeteer, alongside PNG
+*   **Decorations** — SVG assets + template rendering
+*   **Full dynamic slot geometry** — read `layoutConfig.photoSlots` in templates
+*   **Redis + BullMQ** — offload generation to a worker queue
+*   **CSRF protection** — token-based, stored in a cookie
 
 ### Phase 3 (nice-to-have)
 
-- **Bulk CSV generation** — upload a CSV of names + designations, get back a ZIP of posters
-- **Payment gateway** — bKash / Nagad for premium templates and high-res export
-- **Watermark tiers** — FREE (watermarked) vs PREMIUM (clean)
-- **Bangla font picker** — per-user font selection for headlines
-- **OTP login** — phone-based auth via SMS gateway
+*   **Bulk CSV generation** — upload a CSV of names + designations, get back a ZIP of posters
+*   **Payment gateway** — bKash / Nagad for premium templates and high-res export
+*   **Watermark tiers** — FREE (watermarked) vs PREMIUM (clean)
+*   **Bangla font picker** — per-user font selection for headlines
+*   **OTP login** — phone-based auth via SMS gateway
 
 ---
 
 ## Scripts
 
 | Command | Purpose |
-| :--- | :--- |
+| --- | --- |
 | `bun dev` | Start with hot reload (`tsx watch`) |
 | `bun run typecheck` | `tsc --noEmit` — verify types |
 | `bun run build` | Compile to `dist/` |
@@ -1234,5 +1252,6 @@ Internal project. Fonts bundled under SIL OFL. See individual font files for att
 ## Contributors
 
 Built during the Oct 2026 SDLC planning sprint. Two-project layout:
-- `backend/` — this API
-- `frontend/` — Next.js client (separate project)
+
+*   `backend/` — this API
+*   `frontend/` — Next.js client (separate project)
