@@ -42,26 +42,31 @@
   .photo-1 { left: 120px;  top: 180px; width: 420px; height: 520px; }
   .photo-2 { right: 120px; top: 180px; width: 420px; height: 520px; }
   /* Headline */
-  .headline {
+  .headline-block {
     position: absolute;
-    left: 0; right: 0; top: 760px;
+    left: 60px;
+    right: 60px;
+    top: 720px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .headline {
     text-align: center;
     font-family: var(--font-headline);
     font-weight: {{fontWeight.headline}};
     font-size: {{headlineSizePx}}px;
-    line-height: 1;
+    line-height: 1.05;
     color: {{palette.text}};
     text-shadow: {{headlineShadowCss}};
-    padding: 0 60px;
   }
   /* Accent (decorative subheadline) */
   .accent {
-    position: absolute;
-    left: 0; right: 0; top: 960px;
     text-align: center;
     font-family: var(--font-accent);
     font-weight: {{fontWeight.accent}};
-    font-size: 56px;
+    font-size: 52px;
     color: {{palette.accent}};
     text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
   }
@@ -118,8 +123,12 @@
       />
     {{/if}}
 
-    <div class="headline">{{headline}}</div>
-    {{#if subheadline}}<div class="accent">{{subheadline}}</div>{{/if}}
+    <div class="headline-block">
+      <div class="headline">{{headline}}</div>
+      {{#if subheadline}}
+        <div class="accent">{{subheadline}}</div>
+      {{/if}}
+    </div>
 
     <div class="name">{{name}}</div>
     <div class="designation">{{designation}}</div>

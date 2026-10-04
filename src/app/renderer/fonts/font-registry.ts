@@ -1,7 +1,32 @@
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function findFontsDir(): string {
+  const candidates = [
+    __dirname,                                                    // dev: alongside this file
+    path.join(process.cwd(), "dist", "fonts"),                    // copied at build
+    path.join(process.cwd(), "dist", "app", "renderer", "fonts"), // tsc preserved
+    path.join(process.cwd(), "src", "app", "renderer", "fonts"),  // source shipped
+  ];
+
+  for (const dir of candidates) {
+    if (fs.existsSync(path.join(dir, "AnekBangla-ExtraBold.ttf"))) {
+      console.log(`📁 fonts dir: ${dir}`);
+      return dir;
+    }
+  }
+
+  console.error("fonts dir not found. Tried:");
+  for (const c of candidates) console.error("   -", c);
+  return candidates[0]!;
+}
+
+export const FONTS_DIR = findFontsDir();
+
+const fontPath = (file: string): string => path.join(FONTS_DIR, file);
 
 export type FontRole =
   | "headline"
@@ -20,73 +45,66 @@ export interface FontFace {
   format: "truetype" | "opentype" | "woff" | "woff2";
 }
 
-/**
- * THE single source of truth for fonts.
- * Change a font later = edit one entry here.
- */
 export const FONT_REGISTRY: Record<FontRole, FontFace> = {
   headline: {
     family: "Anek Bangla",
     weight: 800,
     style: "normal",
-    file: path.join(__dirname, "AnekBangla-ExtraBold.ttf"),
+    file: fontPath("AnekBangla-ExtraBold.ttf"),   // ← uses FONTS_DIR
     format: "truetype",
   },
   headlineAlt: {
     family: "Anek Bangla",
     weight: 800,
     style: "normal",
-    file: path.join(__dirname, "AnekBangla-ExtraBold.ttf"),
+    file: fontPath("AnekBangla-ExtraBold.ttf"),
     format: "truetype",
   },
   accent: {
     family: "Galada",
     weight: 400,
     style: "normal",
-    file: path.join(__dirname, "Galada-Regular.ttf"),
+    file: fontPath("Galada-Regular.ttf"),
     format: "truetype",
   },
   name: {
     family: "Hind Siliguri",
     weight: 600,
     style: "normal",
-    file: path.join(__dirname, "HindSiliguri-SemiBold.ttf"),
+    file: fontPath("HindSiliguri-SemiBold.ttf"),
     format: "truetype",
   },
   footer: {
     family: "Hind Siliguri",
     weight: 500,
     style: "normal",
-    file: path.join(__dirname, "HindSiliguri-Medium.ttf"),
+    file: fontPath("HindSiliguri-Medium.ttf"),
     format: "truetype",
   },
   serif: {
     family: "Noto Serif Bengali",
     weight: 400,
     style: "normal",
-    file: path.join(__dirname, "NotoSerifBengali-Regular.ttf"),
+    file: fontPath("NotoSerifBengali-Regular.ttf"),
     format: "truetype",
   },
   fallback: {
     family: "Noto Sans Bengali",
     weight: 400,
     style: "normal",
-    file: path.join(__dirname, "NotoSansBengali-Regular.ttf"),
+    file: fontPath("NotoSansBengali-Regular.ttf"),
     format: "truetype",
   },
 };
 
-/** `font-family` CSS string for a role, with safe fallback. */
 export const fontFamily = (role: FontRole): string => {
   const def = FONT_REGISTRY[role];
   return `'${def.family}', 'Noto Sans Bengali', sans-serif`;
 };
 
-/** `font-weight` for a role. */
 export const fontWeight = (role: FontRole): number | string =>
   FONT_REGISTRY[role].weight;
 
-/** Generate @font-face CSS from the registry — no hand-maintained CSS. */
 export const buildFontsCss = (): string => {
   const seen = new Set<string>();
   const lines: string[] = [];
@@ -96,7 +114,6 @@ export const buildFontsCss = (): string => {
     if (seen.has(key)) continue;
     seen.add(key);
 
-    // file:// URL works in Puppeteer setContent with <base> tag
     const url = `file://${def.file.replace(/\\/g, "/")}`;
 
     lines.push(`
@@ -112,7 +129,6 @@ export const buildFontsCss = (): string => {
   return lines.join("\n");
 };
 
-/** Helper values passed to Handlebars templates. */
 export const fontHelpers = () => ({
   fontFamily: {
     headline: fontFamily("headline"),

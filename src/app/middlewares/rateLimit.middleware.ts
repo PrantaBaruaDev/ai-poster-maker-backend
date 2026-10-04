@@ -8,48 +8,45 @@ const handler =
     res.status(429).json({ success: false, message });
   };
 
-const shared = {
+const baseConfig = {
   standardHeaders: "draft-7" as const,
   legacyHeaders: false,
-  keyGenerator: (req: Request) =>
-    req.user?.id ?? req.ip ?? "unknown",
 };
 
+const ipKey = (req: Request) => req.ip ?? "unknown";
+const userOrIpKey = (req: Request) => req.user?.id ?? req.ip ?? "unknown";
+
+export const authRateLimiter = rateLimit({
+    ...baseConfig,
+    windowMs: config.auth_rate_limit_window_ms || 60_000, 
+    limit: config.auth_rate_limit_max || 20, 
+    keyGenerator: ipKey,
+    handler: handler("Too many login attempts. Please try again in a moment."),
+});
+
+export const globalRateLimiter = rateLimit({
+    ...baseConfig,
+    windowMs: config.global_rate_limit_window_ms || 15 * 60 * 1000, 
+    limit: config.global_rate_limit_max || 100, 
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
+    keyGenerator: ipKey,
+    handler: handler("Too many requests from this IP, please slow down."),
+});
+
 export const posterGenerationLimiter = rateLimit({
+  ...baseConfig,
   windowMs: config.rate_limit_window_ms || 3_600_000,
   limit: config.rate_limit_poster_max || 10,
-  ...shared,
+  keyGenerator: userOrIpKey,
   handler: handler("Too many poster generations. Please try again later."),
 });
 
 export const uploadLimiter = rateLimit({
+  ...baseConfig,
   windowMs: config.rate_limit_window_ms || 3_600_000,
   limit: config.rate_limit_upload_max || 30,
-  ...shared,
+  keyGenerator: userOrIpKey,
   handler: handler("Too many uploads. Please try again later."),
 });
 
-
-export const authRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, 
-    limit: 10, 
-    standardHeaders: "draft-7", 
-    legacyHeaders: false, 
-    message: {
-        success: false,
-        statusCode: 429,
-        message: "Too many login/auth attempts from this IP, please try again after 15 minutes.",
-    },
-});
-
-export const globalRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, 
-    limit: 100, 
-    standardHeaders: "draft-7",
-    legacyHeaders: false,
-    message: {
-        success: false,
-        statusCode: 429,
-        message: "Too many requests from this IP, please slow down.",
-    },
-});

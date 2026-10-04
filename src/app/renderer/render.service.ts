@@ -5,8 +5,33 @@ import Handlebars from "handlebars";
 import { getBrowser, renderSemaphore } from "../lib/puppeteer";
 import { buildFontsCss, fontHelpers } from "./fonts/font-registry";
 
+import fsSync from "node:fs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TEMPLATES_DIR = path.join(__dirname, "templates");
+// const TEMPLATES_DIR = path.join(__dirname, "templates");
+
+function findTemplatesDir(): string {
+  const candidates = [
+    path.join(__dirname, "templates"),                                // dist/app/renderer/templates
+    path.join(__dirname, "..", "..", "templates"),                    // if flattened
+    path.join(process.cwd(), "dist", "templates"),                    // Vercel-style
+    path.join(process.cwd(), "dist", "app", "renderer", "templates"), // tsc preserves src/
+    path.join(process.cwd(), "src", "app", "renderer", "templates"),  // source dir shipped
+  ];
+
+  for (const dir of candidates) {
+    if (fsSync.existsSync(dir)) {
+      console.log(`📁 templates dir: ${dir}`);
+      return dir;
+    }
+  }
+
+  console.error("❌ templates dir not found. Tried:");
+  for (const c of candidates) console.error("   -", c);
+  return candidates[0]!;   // fall through; caller will error clearly
+}
+
+const TEMPLATES_DIR = findTemplatesDir();
 
 // Register once — Handlebars helpers are global
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);

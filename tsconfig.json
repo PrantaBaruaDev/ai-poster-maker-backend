@@ -24,6 +24,6 @@
       "@db/*": ["./prisma/generated/prisma/*"]
     }
   },
-  "include": ["src/**/*.ts", "prisma/**/*.ts"],
+  "include": ["src/**/*.ts", "scripts/**/*.ts","prisma/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

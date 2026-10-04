@@ -58,4 +58,32 @@ export const deleteAsset = async (publicId: string): Promise<string> => {
   return result.result;
 };
 
+export async function deleteAssetById(publicId: string): Promise<boolean> {
+  try {
+    const result = await cloudinary.uploader.destroy(publicId, {
+      resource_type: "image",
+      invalidate: true,
+    });
+    return result.result === "ok" || result.result === "not found";
+  } catch (err) {
+    console.error(`Cloudinary delete failed for ${publicId}:`, err);
+    return false;
+  }
+}
+
+export async function deleteAssetsByIds(ids: string[]): Promise<{
+  deleted: number;
+  failed: number;
+}> {
+  const results = await Promise.allSettled(ids.map(deleteAssetById));
+  let deleted = 0;
+  let failed = 0;
+  for (const r of results) {
+    if (r.status === "fulfilled" && r.value) deleted++;
+    else failed++;
+  }
+  return { deleted, failed };
+}
+
+
 export { cloudinary };

@@ -40,6 +40,12 @@ export default {
 	rate_limit_poster_max: Number(process.env.RATE_LIMIT_POSTER_MAX ?? 10),
 	rate_limit_upload_max: Number(process.env.RATE_LIMIT_UPLOAD_MAX ?? 30),
 
+	global_rate_limit_window_ms: Number(process.env.GLOBAL_RATE_LIMIT_WINDOW_MS ?? 15 * 60 * 1000),
+	global_rate_limit_max: Number(process.env.GLOBAL_RATE_LIMIT_MAX ?? 100),
+
+	auth_rate_limit_window_ms: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS ?? 60_000),
+	auth_rate_limit_max: Number(process.env.AUTH_RATE_LIMIT_MAX ?? 20),
+
 	max_upload_bytes: Number(process.env.MAX_UPLOAD_BYTES ?? 5 * 1024 * 1024),
 	max_photos_per_poster: Number(process.env.MAX_PHOTOS_PER_POSTER ?? 3),
 };
