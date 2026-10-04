@@ -5,18 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "tsup",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seeds/index.ts",
     "render:sample": "tsx scripts/render-sample.ts",
+    "typecheck":  "tsc --noEmit",
     "format:check": "biome format ./src",
     "format:fix": "biome format --write ./src",
     "lint:check": "biome lint ./src",
     "lint:fix": "biome lint --write ./src",
-
     "test:layout": "tsx scripts/test-layout.ts",
     "promote-admin": "tsx scripts/promote-admin.ts"
   },
@@ -57,6 +57,7 @@
     "@types/passport-local": "^1.0.38",
     "@types/pg": "^8.23.1",
     "prisma": "^7.10.0",
+    "tsup": "^8.5.1",
     "tsx": "^4.19.2",
     "typescript": "^5.9.0"
   }
