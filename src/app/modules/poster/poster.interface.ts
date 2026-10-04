@@ -44,4 +44,7 @@ export interface PosterDetail {
     layoutConfig: unknown;
     cachedDecoration: unknown;
   };
+
+  generatedImagePublicId?: string;
+  uploadedPhotoPublicIds: string[];
 }

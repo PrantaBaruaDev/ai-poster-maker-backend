@@ -1,7 +1,5 @@
-import { Prisma } from "@db/client";
 import { prisma } from "../../lib/prisma";
 import type { PosterFormData } from "./poster.interface";
-import type { PosterStatus } from "@db/enums";
 
 export const posterRepository = {
   create: (data: {
@@ -9,18 +7,19 @@ export const posterRepository = {
     templateId: string;
     formData: PosterFormData;
     photoUrls: string[];
+    photoPublicIds: string[];
   }) =>
     prisma.poster.create({
       data: {
         userId: data.userId,
         templateId: data.templateId,
-        formData: data.formData as unknown as Prisma.InputJsonValue,
+        formData: data.formData as unknown as object,
         uploadedPhotoUrls: data.photoUrls,
+        uploadedPhotoPublicIds: data.photoPublicIds,
         status: "GENERATING",
       },
     }),
 
-  /** Owner-scoped fetch — includes template for the render step. */
   findByIdForUser: (id: string, userId: string) =>
     prisma.poster.findFirst({
       where: { id, userId },
@@ -38,7 +37,6 @@ export const posterRepository = {
       },
     }),
 
-  /** Admin-scoped fetch — no user filter. */
   findById: (id: string) =>
     prisma.poster.findUnique({
       where: { id },
@@ -56,7 +54,6 @@ export const posterRepository = {
       },
     }),
 
-  /** Paginated history + total in one round trip. */
   history: async (userId: string, skip: number, take: number) => {
     const [items, total] = await prisma.$transaction([
       prisma.poster.findMany({
@@ -77,11 +74,6 @@ export const posterRepository = {
     return { items, total };
   },
 
-  /**
-   * Atomic regenerate guard — increments retryCount + sets GENERATING
-   * ONLY if the poster is in a terminal state and retries remain.
-   * Returns how many rows were updated (0 = guard rejected).
-   */
   tryStartRegenerate: (
     id: string,
     userId: string,
@@ -100,21 +92,30 @@ export const posterRepository = {
         retryCount: { increment: 1 },
         errorMessage: null,
         ...(newFormData && {
-            formData: newFormData as unknown as Prisma.InputJsonValue,
+          formData: newFormData as object,
         }),
       },
     }),
 
-  /** Mark COMPLETED + write GenerationLog atomically. */
   markCompleted: (
     id: string,
     imageUrl: string,
-    log: { prompt: string | null; latencyMs: number | null; tokensUsed: number | null; renderMs: number },
+    imagePublicId: string,
+    log: {
+      prompt: string | null;
+      latencyMs: number | null;
+      tokensUsed: number | null;
+      renderMs: number;
+    },
   ) =>
     prisma.$transaction([
       prisma.poster.update({
         where: { id },
-        data: { status: "COMPLETED", generatedImageUrl: imageUrl },
+        data: {
+          status: "COMPLETED",
+          generatedImageUrl: imageUrl,
+          generatedImagePublicId: imagePublicId,
+        },
       }),
       prisma.generationLog.create({
         data: {
@@ -128,7 +129,6 @@ export const posterRepository = {
       }),
     ]),
 
-  /** Mark FAILED + write GenerationLog atomically. */
   markFailed: (id: string, errorMessage: string) =>
     prisma.$transaction([
       prisma.poster.update({
@@ -144,18 +144,18 @@ export const posterRepository = {
       }),
     ]),
 
-  /** Save the resolved layout so history can show it. */
   saveLayout: (id: string, layoutResult: object) =>
     prisma.poster.update({
-        where: { id },
-        data: { layoutResult: layoutResult as unknown as Prisma.InputJsonValue },
-
+      where: { id },
+      data: { layoutResult },
     }),
 
   deleteForUser: (id: string, userId: string) =>
     prisma.poster.deleteMany({ where: { id, userId } }),
 
-  /** Startup recovery — mark stale GENERATING as FAILED. */
+  deleteById: (id: string) =>
+    prisma.poster.deleteMany({ where: { id } }),
+
   failStuckGenerating: (cutoff: Date) =>
     prisma.poster.updateMany({
       where: { status: "GENERATING", updatedAt: { lt: cutoff } },
@@ -164,5 +164,4 @@ export const posterRepository = {
         errorMessage: "Generation timed out or was interrupted",
       },
     }),
-
 };

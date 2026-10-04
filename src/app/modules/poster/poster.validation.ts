@@ -21,14 +21,26 @@ const formDataSchema = z.object({
   tribute: banglaOrLatinString.max(200).optional(),
 });
 
-export const createPosterSchema = z.object({
+export const createPosterSchema = z
+  .object({
     templateId: z.string().min(1),
     formData: formDataSchema,
     photoUrls: z
       .array(z.string().url("Each photo URL must be valid"))
       .max(3, "Maximum 3 photos allowed")
       .default([]),
-});
+    photoPublicIds: z
+      .array(z.string().min(1))
+      .max(3, "Maximum 3 photo IDs allowed")
+      .default([]),
+  })
+  .refine(
+    (data) => data.photoUrls.length === data.photoPublicIds.length,
+    {
+      message: "photoUrls and photoPublicIds must have the same length",
+      path: ["photoPublicIds"],
+    },
+  );
 
 export const regenerateSchema = z.object({
     formData: formDataSchema.partial().optional(),

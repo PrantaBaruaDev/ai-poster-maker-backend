@@ -7,6 +7,7 @@ import type {
   CreatePosterBody,
   RegenerateBody,
 } from "./poster.interface";
+import { deleteAssetsByIds } from "../../lib/cloudinary";
 
 export const posterService = {
   async create(userId: string, input: CreatePosterBody) {
@@ -29,6 +30,7 @@ export const posterService = {
       templateId: input.templateId,
       formData: input.formData,
       photoUrls: input.photoUrls,
+      photoPublicIds: input.photoPublicIds,
     });
 
     void runPosterGeneration(poster.id);
@@ -103,10 +105,31 @@ export const posterService = {
   },
 
   async delete(userId: string, posterId: string, isAdmin = false) {
+    const poster = isAdmin
+      ? await posterRepository.findById(posterId)
+      : await posterRepository.findByIdForUser(posterId, userId);
+
+    if (!poster) throw new ApiError(404, "Poster not found");
+
+    const publicIds: string[] = [];
+    if (poster.generatedImagePublicId) {
+      publicIds.push(poster.generatedImagePublicId);
+    }
+    if (poster.uploadedPhotoPublicIds?.length) {
+      publicIds.push(...poster.uploadedPhotoPublicIds);
+    }
+
     const result = isAdmin
-      ? await posterRepository.deleteForUser(posterId, "")
+      ? await posterRepository.deleteById(posterId)
       : await posterRepository.deleteForUser(posterId, userId);
 
     if (result.count === 0) throw new ApiError(404, "Poster not found");
+
+    if (publicIds.length > 0) {
+      const { deleted, failed } = await deleteAssetsByIds(publicIds);
+      console.log(
+        ` - Poster ${posterId} deleted — Cloudinary: ${deleted} removed, ${failed} failed`,
+      );
+    }
   },
 };
