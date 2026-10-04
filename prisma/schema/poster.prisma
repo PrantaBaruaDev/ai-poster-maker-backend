@@ -4,8 +4,12 @@ model Poster {
   templateId        String
   formData          Json
   uploadedPhotoUrls String[]
+  uploadedPhotoPublicIds String[] 
+
   layoutResult      Json?
   generatedImageUrl String?
+  generatedImagePublicId String?
+
   status            PosterStatus @default(DRAFT)
   retryCount        Int          @default(0)
   errorMessage      String?
