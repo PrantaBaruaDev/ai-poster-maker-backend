@@ -1043,6 +1043,21 @@ Returns **strictly-shaped JSON**:
 
 Bangla text is rendered by Puppeteer, guaranteeing correct conjuncts and spelling.
 
+### What Gemini's Output Actually Drives
+
+Gemini's JSON is consumed by the renderer as follows:
+
+| Field | Rendered? | Where |
+| :--- | :--- | :--- |
+| `palette.*` | ✅ | CSS variables in every `.hbs` template |
+| `headlineStyle.size` | ✅ | `.headline` font-size in `victory.hbs`, `mourning.hbs`, `campaign.hbs` |
+| `headlineStyle.shadow` | ✅ | CSS `text-shadow` on `.headline` |
+| `photoCrops[].focusX/focusY` | ✅ | `object-position` on `<img>` tags |
+| `photoCrops[].zoom` | ⚠️ | Passed to renderer, not yet applied to `<img>` transform |
+| `decorations[]` | ⚠️ | Passed to renderer, not yet rendered (needs SVG assets) |
+
+**5 of 8 fields visibly affect the poster.** Decorations and photo zoom are deferred to Phase 2.
+
 ### Guardrails
 
 *   **Zod validation** against `geminiLayoutSchema` — rejects malformed output
@@ -1163,9 +1178,9 @@ Rate limit state is **in-memory** — resets on server restart. For production, 
 These were **intentionally deferred** per the PRD's Section 7 task breakdown and the planning document's Section 1.2:
 
 | Feature | Status |
-| --- | --- |
-| Admin UI | **Deferred** — backend API is complete; frontend panel is Phase 9 |
-| Moderation queue UI | **Deferred** — API exists (`GET /admin/posters?flagged=true`) |
+| :--- | :--- |
+| Admin UI | **Done** — see `../frontend/README.md` for the panel implementation |
+| Moderation queue UI | **Done** — `/admin/posters` with flag/unflag/delete |
 | Usage analytics dashboard | **Deferred** |
 | PDF export | **Deferred** — PNG only in MVP |
 | Bulk CSV generation | **Deferred** |
