@@ -8,11 +8,7 @@ import helmet from "helmet";
 import "./app/lib/passport";
 import { globalErrorHandler } from "./app/middlewares/globalErrorHandler";
 import { notFound } from "./app/middlewares/notFound";
-// import { AuthRoutes } from "./app/modules/auth/auth.route";
-import {
-	authRateLimiter,
-	globalRateLimiter,
-} from "./app/middlewares/rateLimit.middleware";
+import { globalRateLimiter } from "./app/middlewares/rateLimit.middleware";
 import { apiRoutes } from "./routes";
 
 const app: Application = express();
